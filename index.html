@@ -363,6 +363,13 @@
     .reveal { opacity: 1; transform: none; transition: none; }
   }
 </style>
+<!-- Amplitude Browser SDK (프로젝트: default / 887088). API 키는 브라우저 공개용 값이며, 비밀 키는 절대 넣지 않음 -->
+<script src="https://cdn.amplitude.com/script/9d022dda38262084d8ccc3156dd74a06.js"></script>
+<script>
+  if (window.amplitude) {
+    window.amplitude.init('9d022dda38262084d8ccc3156dd74a06', { fetchRemoteConfig: true, autocapture: true });
+  }
+</script>
 </head>
 <body>
 
@@ -718,11 +725,12 @@
   // 모바일 기기에서는 QR 안내 숨김
   if (isIOS || isAndroid) document.documentElement.classList.add('is-mobile');
 
-  // ---- 이벤트 트래킹 (GA4 / 광고 픽셀 연동 지점) ----
+  // ---- 이벤트 트래킹 (dataLayer: GA4 / 광고 픽셀 연동 지점, Amplitude: 라이브 이벤트) ----
   function track(name, data) {
-    var payload = Object.assign({ event: name }, utm, data || {});
+    var props = Object.assign({}, utm, data || {});
     window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(payload);
+    window.dataLayer.push(Object.assign({ event: name }, props));
+    if (window.amplitude) window.amplitude.track(name, props);
   }
   track('landing_view');
 
