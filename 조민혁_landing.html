@@ -565,7 +565,7 @@
         <p>받은 추천 코드를 입력하고 앱을 설치하세요. <br>가입 후 첫 주문을 완료하면 나와 친구 모두 5,000원 쿠폰이 지급돼요.</p>
         <form class="ref-code" id="refForm" autocomplete="off">
           <input type="text" id="refInput" maxlength="12" placeholder="추천인 코드 입력 (예: BAEMIN123)" aria-label="추천인 코드">
-          <button type="submit" class="btn btn-mint">적용하기</button>
+          <button type="submit" class="btn btn-mint" data-cta="referral_apply">적용하기</button>
         </form>
         <!-- 중간 CTA ③: 추천 코드 입력 후 바로 설치 -->
         <a href="#download" class="btn btn-ref-dl js-download" data-cta="referral">앱 받고 친구 쿠폰 받기</a>
@@ -627,11 +627,11 @@
     </ul>
     <p>앱 설치 후 가입하면 쿠폰함에 자동 지급돼요 <br><small>이벤트 기간 ~2026.11.30</small></p>
     <div class="store-btns">
-      <a class="store-btn js-store" data-store="ios" href="#" target="_blank" rel="noopener">
+      <a class="store-btn js-store" data-store="ios" data-cta="final_ios" href="#" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.24 1.83-3.32 1.91-3.37-1.04-1.52-2.66-1.73-3.24-1.75-1.38-.14-2.69.81-3.39.81-.7 0-1.78-.79-2.92-.77-1.5.02-2.89.87-3.66 2.22-1.56 2.71-.4 6.72 1.12 8.92.74 1.08 1.63 2.28 2.79 2.24 1.12-.04 1.54-.72 2.89-.72 1.35 0 1.73.72 2.91.7 1.2-.02 1.96-1.1 2.7-2.18.85-1.25 1.2-2.46 1.22-2.52-.03-.01-2.34-.9-2.36-3.56zM14.15 6c.62-.75 1.03-1.78.92-2.82-.89.04-1.97.59-2.6 1.34-.57.66-1.07 1.71-.94 2.73.99.08 2-.5 2.62-1.25z"/></svg>
         <span><small>Download on the</small><b>App Store</b></span>
       </a>
-      <a class="store-btn js-store" data-store="android" href="#" target="_blank" rel="noopener">
+      <a class="store-btn js-store" data-store="android" data-cta="final_android" href="#" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 1.8l10.5 10.2L3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z"/><path fill="#FBBC04" d="M17.6 15.4l-3.5-3.4 3.5-3.4 3.9 2.2c.8.5.8 1.8 0 2.3l-3.9 2.3z"/><path fill="#4285F4" d="M14.1 12l3.5 3.4-12.3 7c-.6.3-1.2.3-1.7-.2L14.1 12z"/><path fill="#EA4335" d="M3.6 1.8c.5-.5 1.1-.5 1.7-.2l12.3 7-3.5 3.4L3.6 1.8z"/></svg>
         <span><small>GET IT ON</small><b>Google Play</b></span>
       </a>
@@ -716,12 +716,6 @@
     });
   }
   setLinks();
-  document.querySelectorAll('.js-store').forEach(function (a) {
-    a.addEventListener('click', function () { track('store_click', { store: a.dataset.store }); });
-  });
-  document.querySelectorAll('.js-download').forEach(function (a) {
-    a.addEventListener('click', function () { track('cta_click', { position: a.dataset.cta }); });
-  });
   // 모바일 기기에서는 QR 안내 숨김
   if (isIOS || isAndroid) document.documentElement.classList.add('is-mobile');
 
@@ -733,6 +727,47 @@
     if (window.amplitude) window.amplitude.track(name, props);
   }
   track('landing_view');
+
+  // ---- CTA 노출·클릭 수집 ----
+  // 대상: data-cta 속성이 있는 모든 버튼 (header, hero, benefits, steps, referral_apply, referral, final_ios, final_android, sticky)
+  // 노출(cta_impression): 버튼이 화면에 50% 이상 1초 이상 보였을 때 CTA마다 페이지당 1회
+  // 클릭(cta_click): 누를 때마다 1회
+  var ctaEls = document.querySelectorAll('[data-cta]');
+  function ctaProps(el) {
+    var w = window.innerWidth;
+    return {
+      cta_id: el.dataset.cta,
+      cta_text: (el.innerText || el.textContent).replace(/\s+/g, ' ').trim(),
+      cta_type: el.dataset.store ? 'store' : (el.dataset.cta === 'referral_apply' ? 'referral_apply' : 'download'),
+      viewport: w <= 640 ? 'mobile' : (w <= 1024 ? 'tablet' : 'desktop')
+    };
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-cta]');
+    if (el) track('cta_click', ctaProps(el));
+  });
+  if ('IntersectionObserver' in window) {
+    var seenTimers = {};
+    var impressionObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        var id = en.target.dataset.cta;
+        if (en.intersectionRatio >= 0.5) {
+          if (!seenTimers[id]) seenTimers[id] = setTimeout(function () {
+            track('cta_impression', ctaProps(en.target));
+            impressionObserver.unobserve(en.target);
+          }, 1000);
+        } else if (seenTimers[id]) {
+          clearTimeout(seenTimers[id]);
+          seenTimers[id] = null;
+        }
+      });
+    }, { threshold: [0, 0.5] });
+    ctaEls.forEach(function (el) { impressionObserver.observe(el); });
+  }
+  // 페이지를 떠날 때(스토어 이동 등) 남은 이벤트를 beacon으로 전송
+  window.addEventListener('pagehide', function () {
+    if (window.amplitude) { window.amplitude.setTransport('beacon'); window.amplitude.flush(); }
+  });
 
   // ---- 추천인 코드 ----
   var refInput = document.getElementById('refInput');
