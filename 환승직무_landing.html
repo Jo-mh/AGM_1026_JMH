@@ -9,6 +9,8 @@
 <meta property="og:title" content="오랜만이에요! 배민이 웰컴 혜택 준비했어요">
 <meta property="og:description" content="첫 주문 10,000원 할인 · 배민클럽 첫 달 무료 · 친구 추천 시 둘 다 5,000원">
 <meta property="og:type" content="website">
+<!-- 실습용 예시: 검색엔진 노출 차단 -->
+<meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -57,6 +59,8 @@
   .btn-mint:hover { background: var(--mint-dark); }
   .btn-ghost { background: #fff; color: var(--navy); border: 2px solid var(--navy); }
   .btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  .demo-bar { background: var(--navy); color: #fff; font-size: 12px; text-align: center; padding: 6px 12px; line-height: 1.4; }
 
   /* ---------- 1. 헤더 ---------- */
   header {
@@ -428,6 +432,9 @@
   </defs>
 </svg>
 
+<!-- 공개 배포용 안내: 실제 프로모션으로 오인되지 않도록 -->
+<div class="demo-bar">마케팅 실습용 예시 페이지입니다 · 배달의민족 공식 페이지가 아니며 실제 혜택이 제공되지 않습니다</div>
+
 <!-- ============ 1. 헤더 ============ -->
 <header>
   <div class="wrap">
@@ -646,7 +653,7 @@
   </div>
 </div>
 <footer>
-  <div class="wrap">ⓒ Woowa Brothers Corp. · 본 페이지는 마케팅 실습용 예시입니다.</div>
+  <div class="wrap">본 페이지는 마케팅 실습 과제로 제작된 예시이며, 배달의민족·우아한형제들과 관련이 없습니다. 표시된 혜택은 실제로 제공되지 않습니다.</div>
 </footer>
 
 <!-- ============ 하단 고정 CTA ============ -->
